@@ -140,6 +140,7 @@ function resetRound() {
 }
 
 function startRound() {
+  show('play');
   state.roundActive = true;
   state.endAt = performance.now() + state.seconds * 1000;
   tick();
