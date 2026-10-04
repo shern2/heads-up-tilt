@@ -44,7 +44,7 @@ export class TiltReader {
   }
 
   _read(e) {
-    const g = e.accelerationIncludingGravity || e.acceleration;
+    const g = e.accelerationIncludingGravity;
     if (!g || g.x == null) return null;
     const inPlane = Math.hypot(g.x, g.y);
     // Negated so that tilting the top edge forward/down (screen toward the

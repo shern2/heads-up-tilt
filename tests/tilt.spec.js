@@ -47,9 +47,12 @@ test('tilt fires correct then pass after calibration', async ({ page }) => {
     await cal;
     clearInterval(iv);
 
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     t.onTilt = (kind) => out.push(kind);
     for (let i = 0; i < 20; i++) fire(0, 8.8, -5.5);  // forward/down -> correct
+    await wait(50);                                   // let the cooldown clear
     for (let i = 0; i < 40; i++) fire(0, 9.8, 0);     // return to neutral to re-arm
+    await wait(50);
     for (let i = 0; i < 20; i++) fire(0, 8.8, 5.5);   // back/up -> pass
     return out;
   });
