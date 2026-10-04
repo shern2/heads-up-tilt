@@ -1,10 +1,15 @@
-// Tilt reader — derives a single screen-relative pitch scalar from gravity.
+// Tilt reader — signed out-of-plane angle of gravity vs the screen plane.
 //
-// Why devicemotion (accelerationIncludingGravity) instead of deviceorientation
-// beta/gamma: Euler angles gimbal-lock around gamma = +/-90 (exactly where a
-// phone sits in landscape on a forehead). The gravity vector has no such
-// singularity, so we project it onto the screen's "up" axis and threshold the
-// delta from a calibrated neutral. Orientation-agnostic and gimbal-free.
+// Why this signal: at the forehead-neutral pose the screen is vertical, so the
+// "screen-up" projection of gravity sits at its extremum — tilting either
+// direction decreases it, which makes forward and back indistinguishable (both
+// read positive). Instead we measure the angle between gravity and the SCREEN
+// PLANE: atan2(g.z, hypot(g.x,g.y)). That is ~0 at neutral, linear near it, and
+// ANTISYMMETRIC in the nod angle — forward and back give opposite signs. It is
+// also independent of UI rotation (the screen normal is the device z-axis
+// whatever the orientation), so no landscape axis-picking and no gimbal lock.
+//
+// Units: degrees. threshold/release are tilt angles.
 
 // ---- iOS permission (must be called from a user gesture) -------------------
 export function needsMotionPermission() {
@@ -18,29 +23,12 @@ export async function requestMotionPermission() {
   catch { return 'denied'; }
 }
 
-// ---- Which device axis points "up" on screen, per rotation angle -----------
-function screenUpAxis(angle) {
-  switch ((((angle % 360) + 360) % 360)) {
-    case 90:  return [-1, 0, 0];
-    case 180: return [0, -1, 0];
-    case 270: return [1, 0, 0];
-    default:  return [0, 1, 0]; // 0 / portrait
-  }
-}
-
-function currentAngle() {
-  if (screen.orientation && typeof screen.orientation.angle === 'number') return screen.orientation.angle;
-  return window.orientation || 0;
-}
-
 export class TiltReader {
   constructor(opts = {}) {
-    // threshold/release are in m/s^2 of gravity projected along screen-up.
-    // 3.0 m/s^2 ~= 18 deg of tilt; 1.2 ~= 7 deg re-arm.
-    this.threshold = opts.threshold ?? 3.0;
-    this.release   = opts.release   ?? 1.2;
-    this.cooldown  = opts.cooldown  ?? 350;   // ms between flips
-    this.smoothing = opts.smoothing ?? 0.3;   // low-pass factor
+    this.threshold = opts.threshold ?? 18;   // deg to fire
+    this.release   = opts.release   ?? 7;    // deg to re-arm
+    this.cooldown  = opts.cooldown  ?? 350;  // ms between flips
+    this.smoothing = opts.smoothing ?? 0.3;  // low-pass factor
     this.invert    = opts.invert    ?? false; // flips correct/pass mapping
 
     this.baseline = null;
@@ -48,8 +36,8 @@ export class TiltReader {
     this.armed = true;
     this.lastFire = 0;
     this.lastDelta = 0;
-    this.onTilt = null;    // (kind:'correct'|'pass', delta)
-    this.onSample = null;  // (delta, smoothed) for the debug HUD
+    this.onTilt = null;    // (kind:'correct'|'pass', deltaDeg)
+    this.onSample = null;  // (deltaDeg, smoothedDeg) for the debug HUD
     this._samples = null;
     this._bound = this._onMotion.bind(this);
     this.running = false;
@@ -58,8 +46,8 @@ export class TiltReader {
   _read(e) {
     const g = e.accelerationIncludingGravity || e.acceleration;
     if (!g || g.x == null) return null;
-    const [ux, uy, uz] = screenUpAxis(currentAngle());
-    return g.x * ux + g.y * uy + g.z * uz;
+    const inPlane = Math.hypot(g.x, g.y);
+    return Math.atan2(g.z || 0, inPlane) * 180 / Math.PI;
   }
 
   _onMotion(e) {

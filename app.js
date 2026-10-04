@@ -5,6 +5,7 @@ const DECKS = [
   { id: 'animals', name: 'Animals', url: 'decks/animals.json' },
 ];
 const TIMES = [40, 70, 100];
+const ROUND_SIZE = 7; // cards sampled per round from the whole deck
 
 const $ = (s) => document.querySelector(s);
 const screens = {
@@ -20,7 +21,8 @@ const show = (name) =>
 const state = {
   deckId: 'animals',
   seconds: 40,
-  cards: [],
+  deckCards: [], // full deck
+  cards: [],     // this round's sample
   idx: 0,
   score: 0,
   correct: [],
@@ -99,8 +101,14 @@ function scoreCard(kind) {
   nextCard();
 }
 
+function sample(arr, n) {
+  const c = arr.slice();
+  shuffle(c);
+  return c.slice(0, Math.max(1, Math.min(n, c.length)));
+}
+
 function resetRound() {
-  shuffle(state.cards);
+  state.cards = sample(state.deckCards, ROUND_SIZE);
   state.idx = 0;
   state.score = 0;
   state.correct = [];
@@ -190,7 +198,7 @@ $('#btn-start').addEventListener('click', async () => {
     btn.textContent = 'Loading\u2026';
     const deck = await loadDeck(meta.url);
     await precacheDeck(deck, (d, t) => { btn.textContent = `Caching ${d}/${t}\u2026`; });
-    state.cards = deck.cards.slice();
+    state.deckCards = deck.cards.slice();
 
     $('#motion-status').textContent = perm === 'granted'
       ? ''

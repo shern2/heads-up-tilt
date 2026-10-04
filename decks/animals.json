@@ -7,6 +7,23 @@
     { "word": "Kangaroo", "image": "assets/cards/kangaroo.svg" },
     { "word": "Dolphin",  "image": "assets/cards/dolphin.svg" },
     { "word": "Giraffe",  "image": "assets/cards/giraffe.svg" },
-    { "word": "Panda",    "image": "assets/cards/panda.svg" }
+    { "word": "Panda",    "image": "assets/cards/panda.svg" },
+    { "word": "Lion",     "image": "assets/cards/lion.svg" },
+    { "word": "Tiger",    "image": "assets/cards/tiger.svg" },
+    { "word": "Monkey",   "image": "assets/cards/monkey.svg" },
+    { "word": "Frog",     "image": "assets/cards/frog.svg" },
+    { "word": "Bee",      "image": "assets/cards/bee.svg" },
+    { "word": "Butterfly","image": "assets/cards/butterfly.svg" },
+    { "word": "Crab",     "image": "assets/cards/crab.svg" },
+    { "word": "Fox",      "image": "assets/cards/fox.svg" },
+    { "word": "Koala",    "image": "assets/cards/koala.svg" },
+    { "word": "Owl",      "image": "assets/cards/owl.svg" },
+    { "word": "Snake",    "image": "assets/cards/snake.svg" },
+    { "word": "Turtle",   "image": "assets/cards/turtle.svg" },
+    { "word": "Whale",    "image": "assets/cards/whale.svg" },
+    { "word": "Zebra",    "image": "assets/cards/zebra.svg" },
+    { "word": "Rabbit",   "image": "assets/cards/rabbit.svg" },
+    { "word": "Crocodile","image": "assets/cards/crocodile.svg" },
+    { "word": "Flamingo", "image": "assets/cards/flamingo.svg" }
   ]
 }

@@ -9,7 +9,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
   overscroll-behavior:none;touch-action:manipulation}
 #app{height:100%}
 .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-  gap:18px;padding:max(18px,env(safe-area-inset-top)) 22px max(18px,env(safe-area-inset-bottom));text-align:center}
+  gap:18px;padding:max(18px,env(safe-area-inset-top)) 22px max(18px,env(safe-area-inset-bottom));text-align:center;
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .screen.active{display:flex}
 h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:.5px}
 .accent{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -48,15 +49,17 @@ h2{margin:0;font-size:clamp(22px,5vw,34px)}
 .overlay-text{font-size:clamp(20px,4vw,34px);font-weight:800}
 
 .feedback{position:absolute;inset:0;pointer-events:none;opacity:0}
-.feedback.correct{animation:flash .45s ease-out;background:var(--ok)}
-.feedback.pass{animation:flash .45s ease-out;background:var(--pass)}
-@keyframes flash{0%{opacity:.55}100%{opacity:0}}
+.feedback.correct{animation:flash .95s ease-out;background:var(--ok)}
+.feedback.pass{animation:flash .95s ease-out;background:var(--pass)}
+@keyframes flash{0%{opacity:0}18%{opacity:.4}100%{opacity:0}}
 
-.score-big{display:flex;flex-direction:column;align-items:center;font-size:clamp(60px,14vw,120px);font-weight:900;line-height:1}
+#screen-results{justify-content:flex-start;gap:12px;padding-top:max(14px,env(safe-area-inset-top))}
+#screen-results h2{font-size:clamp(18px,4vh,30px)}
+.score-big{display:flex;flex-direction:column;align-items:center;font-size:clamp(36px,10vh,90px);font-weight:900;line-height:1}
 .score-big small{font-size:15px;color:var(--muted);font-weight:600;letter-spacing:2px;text-transform:uppercase}
 .results-cols{display:flex;gap:40px;flex-wrap:wrap;justify-content:center}
 .results-cols h3{margin:0 0 6px;color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:1px}
-.results-cols ul{list-style:none;margin:0;padding:0;max-height:28vh;overflow:auto;font-size:17px}
+.results-cols ul{list-style:none;margin:0;padding:0;max-height:24vh;overflow:auto;font-size:16px}
 .results-cols li{padding:2px 0}
 
 .debug{position:fixed;top:12px;left:12px;z-index:50;background:rgba(10,14,30,.92);border:1px solid var(--line);

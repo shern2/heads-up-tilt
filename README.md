@@ -36,11 +36,11 @@ Static files hosted on GitHub Pages (HTTPS is required for the motion sensor).
 
 ## How tilt works
 
-`tilt.js` reads `devicemotion.accelerationIncludingGravity` and projects gravity onto the screen's "up" axis, so it is orientation-agnostic and gimbal-free (Euler `beta`/`gamma` gimbal-lock at ±90°, exactly where a landscape phone sits on a forehead). A low-pass filter plus threshold hysteresis and a per-flip cooldown kill double-fires. A neutral baseline is captured once per session on the calibrate screen.
+`tilt.js` reads `devicemotion.accelerationIncludingGravity` and measures the signed angle between gravity and the **screen plane**: `atan2(g.z, hypot(g.x, g.y))`, in degrees. At the forehead-neutral pose this is ~0 and antisymmetric in the nod angle, so forward and back give opposite signs (projecting onto screen-up fails here — it sits at an extremum, making both directions look the same). It is independent of UI rotation and gimbal-free. A low-pass filter plus threshold hysteresis and a per-flip cooldown kill double-fires. A neutral baseline is captured once per session on the calibrate screen.
 
 - **iOS Safari / PWA**: `DeviceMotionEvent.requestPermission()` is requested from the Start tap (required). HTTPS required.
 - **Android Chrome**: no prompt.
 
 ## Scope
 
-v1: pass-the-phone local play, JSON decks, pre-cached images, wake lock, PWA install. Not in v1: offline, accounts, shared/remote decks, speech recognition, store apps.
+v1: pass-the-phone local play, JSON decks, pre-cached images, wake lock, PWA install. Each round samples 7 cards from the full deck. Not in v1: offline, accounts, shared/remote decks, speech recognition, store apps.
