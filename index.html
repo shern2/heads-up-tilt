@@ -32,10 +32,11 @@
       <div id="time-options" class="pills"></div>
     </div>
   </div>
-  <p class="hint">Tap Start, then raise it to your forehead during the countdown — it calibrates to your pose. 7 cards per round.</p>
-  <p class="hint">Tilt <b>forward</b> = correct &middot; tilt <b>back</b> = pass.</p>
+  <p class="hint">Tap Start, then raise it to your forehead during the countdown — it calibrates to your pose.</p>
+  <p class="hint">Tilt <b>forward</b> = correct &middot; tilt <b>back</b> = pass &middot; <span id="settings-summary"></span></p>
   <button id="btn-start" class="primary big">Start</button>
   <div class="btnrow">
+    <button id="btn-settings" class="ghost">&#9881; Settings</button>
     <button id="btn-fs-home" class="ghost">&#9974; Fullscreen</button>
     <button id="btn-install" class="ghost" hidden>Install app</button>
   </div>
@@ -54,8 +55,10 @@
     <div id="play-score" class="score">0</div>
     <div id="play-timer" class="timer">40</div>
     <div class="play-actions">
-      <button id="btn-fs" class="ghost">&#9974;</button>
-      <button id="btn-end" class="ghost">&#9209;</button>
+      <button id="btn-zero" class="ghost" title="Re-zero tilt">&#9678;</button>
+      <button id="btn-tune" class="ghost" title="Tuning">&#9881;</button>
+      <button id="btn-fs" class="ghost" title="Fullscreen">&#9974;</button>
+      <button id="btn-end" class="ghost" title="End round">&#9209;</button>
     </div>
   </div>
   <div class="card">
@@ -70,7 +73,7 @@
 
 <!-- RESULTS -->
 <section id="screen-results" class="screen">
-  <h2>Time!</h2>
+  <h2 id="results-title">Time!</h2>
   <div class="score-big"><span id="results-score">0</span><small>correct</small></div>
   <div class="results-cols">
     <div><h3>Correct</h3><ul id="list-correct"></ul></div>
@@ -79,6 +82,13 @@
   <button id="btn-again" class="primary big">Play again</button>
   <button id="btn-home" class="ghost">Home</button>
 </section>
+
+<!-- SETTINGS -->
+<aside id="settings" class="debug settings" hidden>
+  <div class="debug-row"><span>Cards per round</span><span id="cards-options" class="pills"></span></div>
+  <div class="debug-note">Round ends as soon as every card is guessed correctly.</div>
+  <div class="debug-row"><button id="btn-settings-close" class="ghost">Close</button></div>
+</aside>
 
 <!-- DEBUG -->
 <aside id="debug" class="debug" hidden>
