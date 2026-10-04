@@ -41,6 +41,20 @@ Static files hosted on GitHub Pages (HTTPS is required for the motion sensor).
 - **iOS Safari / PWA**: `DeviceMotionEvent.requestPermission()` is requested from the Start tap (required). HTTPS required.
 - **Android Chrome**: no prompt.
 
+## Testing
+
+Playwright (Chromium), driven by `python3 -m http.server` via the config's `webServer`:
+
+```sh
+npm install
+npx playwright install chromium
+npm test
+```
+
+Covers: home render + deck/hand options, the no-blank-on-skew guarantee, the settings panel (cards per round, persisted), the countdown → play flow, keyboard scoring, stop-on-clear, end/Play again/Home, deck shape (Animals/Food with images, Actions word-only), and the tilt math itself (vertical ≈ 0, flat = ±90, forward/back give opposite signs; plus a calibration + fire test using synthetic `devicemotion`).
+
+CI: `.github/workflows/test.yml` runs the suite on push to `main` and on PRs.
+
 ## Scope
 
 v1: pass-the-phone local play, JSON decks, pre-cached images, wake lock, PWA install. Each round samples 7 cards from the full deck. Not in v1: offline, accounts, shared/remote decks, speech recognition, store apps.
