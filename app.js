@@ -5,7 +5,7 @@ const DECKS = [
   { id: 'animals', name: 'Animals', url: 'decks/animals.json' },
 ];
 const TIMES = [40, 70, 100];
-const ROUND_SIZE = 7; // cards sampled per round from the whole deck
+const CARDS = [5, 7, 10, 15]; // cards-per-round options
 
 const $ = (s) => document.querySelector(s);
 const screens = {
@@ -20,6 +20,7 @@ const show = (name) =>
 const state = {
   deckId: 'animals',
   seconds: 40,
+  cardsPerRound: 7,
   deckCards: [], // full deck
   cards: [],     // this round's sample
   idx: 0,
@@ -49,6 +50,11 @@ const shuffle = (a) => {
   return a;
 };
 
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('hut.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('hut.' + k, JSON.stringify(v)); } catch {} },
+};
+
 function buildPills(container, items, isOn, onPick, label) {
   container.innerHTML = '';
   items.forEach((it) => {
@@ -65,6 +71,9 @@ function renderHome() {
     (d) => { state.deckId = d.id; renderHome(); }, (d) => d.name);
   buildPills($('#time-options'), TIMES, (t) => t === state.seconds,
     (t) => { state.seconds = t; renderHome(); }, (t) => `${t}s`);
+  buildPills($('#cards-options'), CARDS, (c) => c === state.cardsPerRound,
+    (c) => { state.cardsPerRound = c; store.set('cardsPerRound', c); renderHome(); }, (c) => String(c));
+  $('#settings-summary').textContent = `${state.cardsPerRound} cards / round`;
   $('#play-timer').textContent = state.seconds;
 }
 
@@ -99,6 +108,8 @@ function scoreCard(kind) {
   else { state.passed.push(card.word); }
   $('#play-score').textContent = state.score;
   flash(kind);
+  // Stop as soon as every card in the round has been guessed correctly.
+  if (kind === 'correct' && state.score >= state.cards.length) { endRound('cleared'); return; }
   nextCard();
 }
 
@@ -109,7 +120,7 @@ function sample(arr, n) {
 }
 
 function resetRound() {
-  state.cards = sample(state.deckCards, ROUND_SIZE);
+  state.cards = sample(state.deckCards, state.cardsPerRound);
   state.idx = 0;
   state.score = 0;
   state.correct = [];
@@ -133,12 +144,13 @@ function tick() {
   if (rem <= 0) endRound();
 }
 
-function endRound() {
+function endRound(reason) {
   if (!state.roundActive) return;
   state.roundActive = false;
   clearInterval(state.tickId);
   state.tickId = null;
   releaseWakeLock();
+  $('#results-title').textContent = reason === 'cleared' ? 'Cleared!' : 'Time!';
   renderResults();
   show('results');
 }
@@ -196,12 +208,11 @@ async function toggleFullscreen(force) {
   } catch { /* iOS Safari: no Fullscreen API — install to Home Screen instead */ }
 }
 function syncFsButtons() {
-  const label = document.fullscreenElement ? '\u2716' : '\u26F6';
-  ['#btn-fs', '#btn-fs-home'].forEach((s) => {
-    const b = $(s);
-    if (b) b.textContent = document.fullscreenElement ? '\u2716 Exit' : '\u26F6 Fullscreen';
-  });
-  const f = $('#btn-fs'); if (f) f.textContent = label;
+  const home = $('#btn-fs-home');
+  if (home) home.textContent = '\u26F6 Fullscreen';
+  const f = $('#btn-fs');
+  if (f) f.textContent = '\u26F6';   // stays a fullscreen icon — never an 'x'
+  document.documentElement.classList.toggle('is-fullscreen', !!document.fullscreenElement);
 }
 document.addEventListener('fullscreenchange', syncFsButtons);
 $('#btn-fs').addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
@@ -250,7 +261,14 @@ $('#btn-start').addEventListener('click', async () => {
   }
 });
 
-$('#btn-end').addEventListener('click', (e) => { e.stopPropagation(); endRound(); });
+$('#btn-end').addEventListener('click', (e) => { e.stopPropagation(); endRound('time'); });
+// in-game: re-zero the tilt baseline without leaving the round
+$('#btn-zero').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  tilt.start();
+  await tilt.calibrate(600);
+});
+$('#btn-tune').addEventListener('click', (e) => { e.stopPropagation(); $('#debug').hidden = !$('#debug').hidden; });
 $('#play-overlay').addEventListener('click', startRound);
 $('#btn-again').addEventListener('click', () => { show('countdown'); runCountdown(); });
 $('#btn-home').addEventListener('click', () => { renderHome(); show('home'); });
@@ -264,6 +282,9 @@ document.addEventListener('keydown', (e) => {
 
 // ---- debug HUD -------------------------------------------------------------
 $('#btn-debug').addEventListener('click', () => { $('#debug').hidden = !$('#debug').hidden; });
+// settings panel (home)
+$('#btn-settings').addEventListener('click', () => { renderHome(); $('#settings').hidden = !$('#settings').hidden; });
+$('#btn-settings-close').addEventListener('click', () => { $('#settings').hidden = true; });
 $('#debug-invert').addEventListener('change', (e) => { tilt.invert = e.target.checked; });
 $('#debug-threshold').addEventListener('input', (e) => {
   tilt.threshold = Number(e.target.value);
@@ -304,6 +325,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ---- init ------------------------------------------------------------------
+state.cardsPerRound = store.get('cardsPerRound', 7);
 renderHome();
 $('#debug-threshold').value = String(tilt.threshold);
 $('#debug-motion').textContent = needsMotionPermission() ? 'needs grant' : 'open';
