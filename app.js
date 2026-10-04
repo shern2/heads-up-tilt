@@ -35,6 +35,7 @@ const state = {
   correct: [],
   passed: [],
   roundActive: false,
+  countdownActive: false,
   endAt: 0,
   tickId: null,
   wakeLock: null,
@@ -88,19 +89,22 @@ function renderHome() {
 // ---- card / round ----------------------------------------------------------
 function renderCard() {
   const c = state.cards[state.idx];
-  if (!c) return;
   const img = $('#card-img');
   const word = $('#card-word');
-  // One thing on screen: the image if the card has one (it carries the word),
-  // otherwise the word alone. No redundant duplicate line.
-  if (c.image) { img.src = c.image; img.style.display = ''; word.style.display = 'none'; }
-  else { img.removeAttribute('src'); img.style.display = 'none'; word.textContent = c.word; word.style.display = ''; }
-}
-
-function nextCard() {
-  state.idx++;
-  if (state.idx >= state.cards.length) { shuffle(state.cards); state.idx = 0; }
-  renderCard();
+  if (!c) { if (img) img.style.display = 'none'; if (word) { word.textContent = ''; word.style.display = 'none'; } return; }
+  if (c.image) {
+    word.style.display = 'none';
+    img.style.display = '';
+    img.alt = c.word;
+    // if the image 404s between warm-cache and render, fall back to the word
+    img.onerror = () => { img.style.display = 'none'; word.textContent = c.word; word.style.display = ''; };
+    img.src = c.image;
+  } else {
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    word.textContent = c.word;
+    word.style.display = '';
+  }
 }
 
 function flash(kind) {
@@ -114,13 +118,22 @@ function flash(kind) {
 function scoreCard(kind) {
   const card = state.cards[state.idx];
   if (!card) return;
-  if (kind === 'correct') { state.score++; state.correct.push(card.word); }
-  else { state.passed.push(card.word); }
-  setText('#play-score', String(state.score));
-  flash(kind);
-  // Stop as soon as every card in the round has been guessed correctly.
-  if (kind === 'correct' && state.score >= state.cards.length) { endRound('cleared'); return; }
-  nextCard();
+  if (kind === 'correct') {
+    // Remove it from rotation so a guessed card can't be scored twice — the
+    // round clears only when the pool is genuinely empty (unique cards).
+    state.correct.push(card.word);
+    state.cards.splice(state.idx, 1);
+    setText('#play-score', String(state.correct.length));
+    flash('correct');
+    if (state.cards.length === 0) { endRound('cleared'); return; }
+    if (state.idx >= state.cards.length) state.idx = 0;
+    renderCard();
+  } else {
+    state.passed.push(card.word);
+    flash('pass');
+    state.idx = (state.idx + 1) % state.cards.length;
+    renderCard();
+  }
 }
 
 function sample(arr, n) {
@@ -130,9 +143,8 @@ function sample(arr, n) {
 }
 
 function resetRound() {
-  state.cards = sample(state.deckCards, state.cardsPerRound);
+  state.cards = sample(state.deckCards, state.cardsPerRound); // remaining pool
   state.idx = 0;
-  state.score = 0;
   state.correct = [];
   state.passed = [];
   setText('#play-score', '0');
@@ -166,18 +178,21 @@ function endRound(reason) {
 }
 
 function renderResults() {
-  setText('#results-score', String(state.score));
+  setText('#results-score', String(state.correct.length));
   const fill = (ul, arr) => {
     if (!ul) return;
     ul.innerHTML = '';
-    if (!arr.length) { const li = document.createElement('li'); li.textContent = '\u2014'; ul.appendChild(li); return; }
-    arr.forEach((w) => { const li = document.createElement('li'); li.textContent = w; ul.appendChild(li); });
+    const uniq = [...new Set(arr)];
+    if (!uniq.length) { const li = document.createElement('li'); li.textContent = '\u2014'; ul.appendChild(li); return; }
+    uniq.forEach((w) => { const li = document.createElement('li'); li.textContent = w; ul.appendChild(li); });
   };
   fill($('#list-correct'), state.correct);
   fill($('#list-passed'), state.passed);
 }
 
 function runCountdown() {
+  if (state.countdownActive) return; // ignore re-entrant Start / Play-again
+  state.countdownActive = true;
   resetRound();
   show('countdown');
   const el = $('#countdown');
@@ -194,7 +209,7 @@ function runCountdown() {
     if (n <= 0) {
       clearInterval(id);
       if (el) el.textContent = 'GO';
-      calibrating.then(() => setTimeout(startRound, 200));
+      calibrating.then(() => setTimeout(() => { state.countdownActive = false; startRound(); }, 200));
       return;
     }
     if (el) el.textContent = String(n);
@@ -241,6 +256,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---- flow ------------------------------------------------------------------
 on('#btn-start', 'click', async () => {
+  if (state.countdownActive || state.roundActive) return;
   const btn = $('#btn-start');
   btn.disabled = true;
   const original = btn.textContent;
@@ -278,7 +294,13 @@ on('#btn-zero', 'click', async (e) => {
 });
 on('#btn-tune', 'click', (e) => { e.stopPropagation(); const d = $('#debug'); if (d) d.hidden = !d.hidden; });
 on('#btn-again', 'click', () => { runCountdown(); });
-on('#btn-home', 'click', () => { renderHome(); show('home'); });
+on('#btn-home', 'click', () => {
+  state.roundActive = false;
+  tilt.stop();
+  releaseWakeLock();
+  renderHome();
+  show('home');
+});
 
 // desktop / fallback: arrows simulate tilt
 document.addEventListener('keydown', (e) => {
@@ -333,6 +355,7 @@ if ('serviceWorker' in navigator) {
 
 // ---- init ------------------------------------------------------------------
 state.cardsPerRound = store.get('cardsPerRound', 7);
+if (!CARDS.includes(state.cardsPerRound)) state.cardsPerRound = 7;
 renderHome();
 const thrEl = $('#debug-threshold'); if (thrEl) thrEl.value = String(tilt.threshold);
 setText('#debug-motion', needsMotionPermission() ? 'needs grant' : 'open');
