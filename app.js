@@ -133,7 +133,6 @@ function resetRound() {
 
 function startRound() {
   state.roundActive = true;
-  $('#play-overlay').hidden = true;
   state.endAt = performance.now() + state.seconds * 1000;
   tick();
   state.tickId = setInterval(tick, 200);
@@ -173,10 +172,10 @@ function runCountdown() {
   show('countdown');
   const el = $('#countdown');
   tilt.start();
-  // Assume the player is raising the phone into its vertical play pose now;
-  // capture the neutral baseline during the countdown, finishing before GO.
+  // Capture the baseline in the final half-second of the countdown, so it
+  // reflects the pose the player is actually holding at GO (not an earlier one).
   const calibrating = new Promise((resolve) => {
-    setTimeout(async () => { await tilt.calibrate(900); resolve(); }, 700);
+    setTimeout(async () => { await tilt.calibrate(500); resolve(); }, 1600);
   });
   let n = 3;
   el.textContent = String(n);
@@ -185,10 +184,7 @@ function runCountdown() {
     if (n <= 0) {
       clearInterval(id);
       el.textContent = 'GO';
-      calibrating.then(() => setTimeout(() => {
-        show('play');
-        $('#play-overlay').hidden = false;
-      }, 300));
+      calibrating.then(() => setTimeout(startRound, 200));
       return;
     }
     el.textContent = String(n);
@@ -271,7 +267,6 @@ $('#btn-zero').addEventListener('click', async (e) => {
   await tilt.calibrate(600);
 });
 $('#btn-tune').addEventListener('click', (e) => { e.stopPropagation(); $('#debug').hidden = !$('#debug').hidden; });
-$('#play-overlay').addEventListener('click', startRound);
 $('#btn-again').addEventListener('click', () => { show('countdown'); runCountdown(); });
 $('#btn-home').addEventListener('click', () => { renderHome(); show('home'); });
 

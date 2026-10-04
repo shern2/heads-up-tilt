@@ -49,9 +49,6 @@ h2{margin:0;font-size:clamp(22px,5vw,34px)}
 .card{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;overflow:hidden;width:100%}
 .card img{max-height:100%;max-width:82vw;border-radius:20px;object-fit:contain}
 .word{font-size:clamp(22px,7vh,48px);font-weight:900}
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,12,26,.72);backdrop-filter:blur(3px)}
-.overlay[hidden]{display:none}
-.overlay-text{font-size:clamp(20px,4vw,34px);font-weight:800}
 
 .feedback{position:absolute;inset:0;pointer-events:none;opacity:0}
 .feedback.correct{animation:flash .95s ease-out;background:var(--ok)}
