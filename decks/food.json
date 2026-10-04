@@ -1,0 +1,101 @@
+{
+  "name": "Food & Drink",
+  "cards": [
+    {
+      "word": "Pizza",
+      "image": "assets/cards/pizza.svg"
+    },
+    {
+      "word": "Burger",
+      "image": "assets/cards/burger.svg"
+    },
+    {
+      "word": "Sushi",
+      "image": "assets/cards/sushi.svg"
+    },
+    {
+      "word": "Ice Cream",
+      "image": "assets/cards/icecream.svg"
+    },
+    {
+      "word": "Coffee",
+      "image": "assets/cards/coffee.svg"
+    },
+    {
+      "word": "Banana",
+      "image": "assets/cards/banana.svg"
+    },
+    {
+      "word": "Watermelon",
+      "image": "assets/cards/watermelon.svg"
+    },
+    {
+      "word": "Taco",
+      "image": "assets/cards/taco.svg"
+    },
+    {
+      "word": "Popcorn",
+      "image": "assets/cards/popcorn.svg"
+    },
+    {
+      "word": "Donut",
+      "image": "assets/cards/donut.svg"
+    },
+    {
+      "word": "Cupcake",
+      "image": "assets/cards/cupcake.svg"
+    },
+    {
+      "word": "Avocado",
+      "image": "assets/cards/avocado.svg"
+    },
+    {
+      "word": "Pineapple",
+      "image": "assets/cards/pineapple.svg"
+    },
+    {
+      "word": "Strawberry",
+      "image": "assets/cards/strawberry.svg"
+    },
+    {
+      "word": "Croissant",
+      "image": "assets/cards/croissant.svg"
+    },
+    {
+      "word": "French Fries",
+      "image": "assets/cards/frenchfries.svg"
+    },
+    {
+      "word": "Spaghetti",
+      "image": "assets/cards/spaghetti.svg"
+    },
+    {
+      "word": "Hot Dog",
+      "image": "assets/cards/hotdog.svg"
+    },
+    {
+      "word": "Pancakes",
+      "image": "assets/cards/pancakes.svg"
+    },
+    {
+      "word": "Grapes",
+      "image": "assets/cards/grapes.svg"
+    },
+    {
+      "word": "Cheese",
+      "image": "assets/cards/cheese.svg"
+    },
+    {
+      "word": "Bread",
+      "image": "assets/cards/bread.svg"
+    },
+    {
+      "word": "Egg",
+      "image": "assets/cards/egg.svg"
+    },
+    {
+      "word": "Honey",
+      "image": "assets/cards/honey.svg"
+    }
+  ]
+}

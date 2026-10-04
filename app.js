@@ -3,6 +3,8 @@ import { requestMotionPermission, needsMotionPermission, TiltReader } from './ti
 
 const DECKS = [
   { id: 'animals', name: 'Animals', url: 'decks/animals.json' },
+  { id: 'actions', name: 'Actions', url: 'decks/actions.json' },
+  { id: 'food',    name: 'Food & Drink', url: 'decks/food.json' },
 ];
 const TIMES = [40, 70, 100];
 const CARDS = [5, 7, 10, 15]; // cards-per-round options
