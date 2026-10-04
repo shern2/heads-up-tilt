@@ -170,6 +170,32 @@ function runCountdown() {
   }, 700);
 }
 
+// ---- fullscreen ------------------------------------------------------------
+async function toggleFullscreen(force) {
+  const el = document.documentElement;
+  try {
+    const wantOn = force !== undefined ? force : !document.fullscreenElement;
+    if (wantOn && !document.fullscreenElement && el.requestFullscreen) {
+      await el.requestFullscreen({ navigationUI: 'hide' });
+      // best-effort: lock landscape once fullscreen (Android)
+      try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch {}
+    } else if (!wantOn && document.fullscreenElement && document.exitFullscreen) {
+      await document.exitFullscreen();
+    }
+  } catch { /* iOS Safari: no Fullscreen API — install to Home Screen instead */ }
+}
+function syncFsButtons() {
+  const label = document.fullscreenElement ? '\u2716' : '\u26F6';
+  ['#btn-fs', '#btn-fs-home'].forEach((s) => {
+    const b = $(s);
+    if (b) b.textContent = document.fullscreenElement ? '\u2716 Exit' : '\u26F6 Fullscreen';
+  });
+  const f = $('#btn-fs'); if (f) f.textContent = label;
+}
+document.addEventListener('fullscreenchange', syncFsButtons);
+$('#btn-fs').addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
+$('#btn-fs-home').addEventListener('click', () => toggleFullscreen());
+
 // ---- wake lock -------------------------------------------------------------
 async function acquireWakeLock() {
   try { if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); }
@@ -193,6 +219,7 @@ $('#btn-start').addEventListener('click', async () => {
     const perm = await requestMotionPermission();
     state.motion = perm;
     $('#debug-motion').textContent = perm;
+    toggleFullscreen(true); // hide browser chrome (no-op on iOS Safari)
 
     const meta = DECKS.find((d) => d.id === state.deckId);
     btn.textContent = 'Loading\u2026';

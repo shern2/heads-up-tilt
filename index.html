@@ -35,7 +35,10 @@
   <p class="hint">Hold the phone against your forehead, screen facing out. Each round draws 7 cards from the deck.</p>
   <p class="hint">Tilt <b>forward</b> = correct &middot; tilt <b>back</b> = pass.</p>
   <button id="btn-start" class="primary big">Start</button>
-  <button id="btn-install" class="ghost" hidden>Install app</button>
+  <div class="btnrow">
+    <button id="btn-fs-home" class="ghost">&#9974; Fullscreen</button>
+    <button id="btn-install" class="ghost" hidden>Install app</button>
+  </div>
   <p id="ios-hint" class="hint subtle" hidden>On iPhone: Share &rarr; <b>Add to Home Screen</b> to install.</p>
   <p id="motion-status" class="hint subtle"></p>
 </section>
@@ -58,7 +61,10 @@
   <div class="play-top">
     <div id="play-score" class="score">0</div>
     <div id="play-timer" class="timer">40</div>
-    <button id="btn-end" class="ghost">&#9209;</button>
+    <div class="play-actions">
+      <button id="btn-fs" class="ghost">&#9974;</button>
+      <button id="btn-end" class="ghost">&#9209;</button>
+    </div>
   </div>
   <div class="card">
     <img id="card-img" alt="" />
