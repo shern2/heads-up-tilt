@@ -25,10 +25,10 @@ export async function requestMotionPermission() {
 
 export class TiltReader {
   constructor(opts = {}) {
-    this.threshold = opts.threshold ?? 18;   // deg to fire
-    this.release   = opts.release   ?? 7;    // deg to re-arm
+    this.threshold = opts.threshold ?? 26;   // deg to fire (was 18 — too twitchy)
+    this.release   = opts.release   ?? 10;   // deg to re-arm
     this.cooldown  = opts.cooldown  ?? 350;  // ms between flips
-    this.smoothing = opts.smoothing ?? 0.3;  // low-pass factor
+    this.smoothing = opts.smoothing ?? 0.25; // low-pass factor
     this.invert    = opts.invert    ?? false; // flips correct/pass mapping
 
     this.baseline = null;
@@ -47,7 +47,10 @@ export class TiltReader {
     const g = e.accelerationIncludingGravity || e.acceleration;
     if (!g || g.x == null) return null;
     const inPlane = Math.hypot(g.x, g.y);
-    return Math.atan2(g.z || 0, inPlane) * 180 / Math.PI;
+    // Negated so that tilting the top edge forward/down (screen toward the
+    // floor) is + and reads as 'correct'; tilting back (screen toward the sky)
+    // is - and reads as 'pass'.
+    return -Math.atan2(g.z || 0, inPlane) * 180 / Math.PI;
   }
 
   _onMotion(e) {

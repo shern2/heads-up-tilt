@@ -239,7 +239,11 @@ document.addEventListener('keydown', (e) => {
 // ---- debug HUD -------------------------------------------------------------
 $('#btn-debug').addEventListener('click', () => { $('#debug').hidden = !$('#debug').hidden; });
 $('#debug-invert').addEventListener('change', (e) => { tilt.invert = e.target.checked; });
-$('#debug-threshold').addEventListener('input', (e) => { tilt.threshold = Number(e.target.value); });
+$('#debug-threshold').addEventListener('input', (e) => {
+  tilt.threshold = Number(e.target.value);
+  $('#debug-thresh').textContent = e.target.value;
+});
+$('#debug-thresh').textContent = String(tilt.threshold);
 
 // ---- install / PWA ---------------------------------------------------------
 let deferredPrompt = null;
@@ -266,4 +270,5 @@ if ('serviceWorker' in navigator) {
 
 // ---- init ------------------------------------------------------------------
 renderHome();
+$('#debug-threshold').value = String(tilt.threshold);
 $('#debug-motion').textContent = needsMotionPermission() ? 'needs grant' : 'open';
