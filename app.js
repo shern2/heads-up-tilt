@@ -73,9 +73,11 @@ function renderHome() {
 function renderCard() {
   const c = state.cards[state.idx];
   const img = $('#card-img');
-  if (c.image) { img.src = c.image; img.style.display = ''; }
-  else { img.removeAttribute('src'); img.style.display = 'none'; }
-  $('#card-word').textContent = c.word;
+  const word = $('#card-word');
+  // One thing on screen: the image if the card has one (it carries the word),
+  // otherwise the word alone. No redundant duplicate line.
+  if (c.image) { img.src = c.image; img.style.display = ''; word.style.display = 'none'; }
+  else { img.removeAttribute('src'); img.style.display = 'none'; word.textContent = c.word; word.style.display = ''; }
 }
 
 function nextCard() {
@@ -269,6 +271,15 @@ $('#debug-invert').addEventListener('change', (e) => { tilt.invert = e.target.ch
 $('#debug-threshold').addEventListener('input', (e) => {
   tilt.threshold = Number(e.target.value);
   $('#debug-thresh').textContent = e.target.value;
+});
+$('#debug-rezero').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  const b = e.currentTarget;
+  tilt.start();
+  b.textContent = 'Hold still\u2026';
+  await tilt.calibrate(700);
+  b.textContent = 'Set neutral';
+  $('#debug-delta').textContent = '0.00';
 });
 $('#debug-thresh').textContent = String(tilt.threshold);
 

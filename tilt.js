@@ -25,8 +25,8 @@ export async function requestMotionPermission() {
 
 export class TiltReader {
   constructor(opts = {}) {
-    this.threshold = opts.threshold ?? 26;   // deg to fire (was 18 — too twitchy)
-    this.release   = opts.release   ?? 10;   // deg to re-arm
+    this.threshold = opts.threshold ?? 30;   // deg to fire
+    this.release   = opts.release   ?? 12;   // deg to re-arm
     this.cooldown  = opts.cooldown  ?? 350;  // ms between flips
     this.smoothing = opts.smoothing ?? 0.25; // low-pass factor
     this.invert    = opts.invert    ?? false; // flips correct/pass mapping
