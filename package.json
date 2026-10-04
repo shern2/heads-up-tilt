@@ -1,0 +1,16 @@
+{
+  "name": "heads-up-tilt",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tilt-driven pass-the-phone party game — static PWA.",
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}
