@@ -1,0 +1,12 @@
+{
+  "name": "Animals",
+  "cards": [
+    { "word": "Elephant", "image": "assets/cards/elephant.svg" },
+    { "word": "Penguin",  "image": "assets/cards/penguin.svg" },
+    { "word": "Octopus",  "image": "assets/cards/octopus.svg" },
+    { "word": "Kangaroo", "image": "assets/cards/kangaroo.svg" },
+    { "word": "Dolphin",  "image": "assets/cards/dolphin.svg" },
+    { "word": "Giraffe",  "image": "assets/cards/giraffe.svg" },
+    { "word": "Panda",    "image": "assets/cards/panda.svg" }
+  ]
+}
