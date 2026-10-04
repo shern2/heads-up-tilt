@@ -10,7 +10,6 @@ const ROUND_SIZE = 7; // cards sampled per round from the whole deck
 const $ = (s) => document.querySelector(s);
 const screens = {
   home: $('#screen-home'),
-  calibrate: $('#screen-calibrate'),
   countdown: $('#screen-countdown'),
   play: $('#screen-play'),
   results: $('#screen-results'),
@@ -157,7 +156,14 @@ function renderResults() {
 
 function runCountdown() {
   resetRound();
+  show('countdown');
   const el = $('#countdown');
+  tilt.start();
+  // Assume the player is raising the phone into its vertical play pose now;
+  // capture the neutral baseline during the countdown, finishing before GO.
+  const calibrating = new Promise((resolve) => {
+    setTimeout(async () => { await tilt.calibrate(900); resolve(); }, 700);
+  });
   let n = 3;
   el.textContent = String(n);
   const id = setInterval(() => {
@@ -165,7 +171,10 @@ function runCountdown() {
     if (n <= 0) {
       clearInterval(id);
       el.textContent = 'GO';
-      setTimeout(() => { show('play'); $('#play-overlay').hidden = false; }, 350);
+      calibrating.then(() => setTimeout(() => {
+        show('play');
+        $('#play-overlay').hidden = false;
+      }, 300));
       return;
     }
     el.textContent = String(n);
@@ -232,25 +241,13 @@ $('#btn-start').addEventListener('click', async () => {
     $('#motion-status').textContent = perm === 'granted'
       ? ''
       : (needsMotionPermission() ? 'Motion access not granted — tap-to-score fallback active.' : '');
-    show('calibrate');
+    runCountdown();
   } catch (err) {
     alert('Could not start: ' + err.message);
   } finally {
     btn.disabled = false;
     btn.textContent = original;
   }
-});
-
-$('#btn-calibrate').addEventListener('click', async () => {
-  const b = $('#btn-calibrate');
-  b.disabled = true;
-  b.textContent = 'Hold still\u2026';
-  tilt.start();
-  await tilt.calibrate(900);
-  b.disabled = false;
-  b.textContent = 'Ready';
-  show('countdown');
-  runCountdown();
 });
 
 $('#btn-end').addEventListener('click', (e) => { e.stopPropagation(); endRound(); });
