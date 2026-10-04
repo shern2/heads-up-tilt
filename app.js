@@ -10,6 +10,11 @@ const TIMES = [40, 70, 100];
 const CARDS = [5, 7, 10, 15]; // cards-per-round options
 
 const $ = (s) => document.querySelector(s);
+// Safe helpers — never throw on a missing element, so a stale HTML/JS skew
+// degrades gracefully instead of blanking the whole page.
+const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
+const setText = (sel, t) => { const el = $(sel); if (el) el.textContent = t; };
+
 const screens = {
   home: $('#screen-home'),
   countdown: $('#screen-countdown'),
@@ -17,7 +22,7 @@ const screens = {
   results: $('#screen-results'),
 };
 const show = (name) =>
-  Object.entries(screens).forEach(([k, el]) => el.classList.toggle('active', k === name));
+  Object.entries(screens).forEach(([k, el]) => el && el.classList.toggle('active', k === name));
 
 const state = {
   deckId: 'animals',
@@ -40,7 +45,7 @@ const tilt = new TiltReader();
 tilt.onTilt = (kind) => { if (state.roundActive) scoreCard(kind); };
 tilt.onSample = (delta) => {
   const d = $('#debug');
-  if (d && !d.hidden) $('#debug-delta').textContent = delta.toFixed(2);
+  if (d && !d.hidden) setText('#debug-delta', delta.toFixed(2));
 };
 
 // ---- helpers ---------------------------------------------------------------
@@ -58,6 +63,7 @@ const store = {
 };
 
 function buildPills(container, items, isOn, onPick, label) {
+  if (!container) return;
   container.innerHTML = '';
   items.forEach((it) => {
     const b = document.createElement('button');
@@ -75,13 +81,14 @@ function renderHome() {
     (t) => { state.seconds = t; renderHome(); }, (t) => `${t}s`);
   buildPills($('#cards-options'), CARDS, (c) => c === state.cardsPerRound,
     (c) => { state.cardsPerRound = c; store.set('cardsPerRound', c); renderHome(); }, (c) => String(c));
-  $('#settings-summary').textContent = `${state.cardsPerRound} cards / round`;
-  $('#play-timer').textContent = state.seconds;
+  setText('#settings-summary', `${state.cardsPerRound} cards / round`);
+  setText('#play-timer', String(state.seconds));
 }
 
 // ---- card / round ----------------------------------------------------------
 function renderCard() {
   const c = state.cards[state.idx];
+  if (!c) return;
   const img = $('#card-img');
   const word = $('#card-word');
   // One thing on screen: the image if the card has one (it carries the word),
@@ -98,6 +105,7 @@ function nextCard() {
 
 function flash(kind) {
   const f = $('#feedback');
+  if (!f) return;
   f.classList.remove('correct', 'pass');
   void f.offsetWidth;
   f.classList.add(kind);
@@ -108,7 +116,7 @@ function scoreCard(kind) {
   if (!card) return;
   if (kind === 'correct') { state.score++; state.correct.push(card.word); }
   else { state.passed.push(card.word); }
-  $('#play-score').textContent = state.score;
+  setText('#play-score', String(state.score));
   flash(kind);
   // Stop as soon as every card in the round has been guessed correctly.
   if (kind === 'correct' && state.score >= state.cards.length) { endRound('cleared'); return; }
@@ -127,7 +135,7 @@ function resetRound() {
   state.score = 0;
   state.correct = [];
   state.passed = [];
-  $('#play-score').textContent = '0';
+  setText('#play-score', '0');
   renderCard();
 }
 
@@ -141,8 +149,8 @@ function startRound() {
 
 function tick() {
   const rem = Math.max(0, Math.ceil((state.endAt - performance.now()) / 1000));
-  $('#play-timer').textContent = rem;
-  if (rem <= 0) endRound();
+  setText('#play-timer', String(rem));
+  if (rem <= 0) endRound('time');
 }
 
 function endRound(reason) {
@@ -151,16 +159,17 @@ function endRound(reason) {
   clearInterval(state.tickId);
   state.tickId = null;
   releaseWakeLock();
-  $('#results-title').textContent = reason === 'cleared' ? 'Cleared!' : 'Time!';
+  setText('#results-title', reason === 'cleared' ? 'Cleared!' : 'Time!');
   renderResults();
   show('results');
 }
 
 function renderResults() {
-  $('#results-score').textContent = state.score;
+  setText('#results-score', String(state.score));
   const fill = (ul, arr) => {
+    if (!ul) return;
     ul.innerHTML = '';
-    if (!arr.length) { const li = document.createElement('li'); li.textContent = '—'; ul.appendChild(li); return; }
+    if (!arr.length) { const li = document.createElement('li'); li.textContent = '\u2014'; ul.appendChild(li); return; }
     arr.forEach((w) => { const li = document.createElement('li'); li.textContent = w; ul.appendChild(li); });
   };
   fill($('#list-correct'), state.correct);
@@ -178,16 +187,16 @@ function runCountdown() {
     setTimeout(async () => { await tilt.calibrate(500); resolve(); }, 1600);
   });
   let n = 3;
-  el.textContent = String(n);
+  if (el) el.textContent = String(n);
   const id = setInterval(() => {
     n--;
     if (n <= 0) {
       clearInterval(id);
-      el.textContent = 'GO';
+      if (el) el.textContent = 'GO';
       calibrating.then(() => setTimeout(startRound, 200));
       return;
     }
-    el.textContent = String(n);
+    if (el) el.textContent = String(n);
   }, 700);
 }
 
@@ -213,8 +222,8 @@ function syncFsButtons() {
   document.documentElement.classList.toggle('is-fullscreen', !!document.fullscreenElement);
 }
 document.addEventListener('fullscreenchange', syncFsButtons);
-$('#btn-fs').addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
-$('#btn-fs-home').addEventListener('click', () => toggleFullscreen());
+on('#btn-fs', 'click', (e) => { e.stopPropagation(); toggleFullscreen(); });
+on('#btn-fs-home', 'click', () => toggleFullscreen());
 
 // ---- wake lock -------------------------------------------------------------
 async function acquireWakeLock() {
@@ -230,7 +239,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---- flow ------------------------------------------------------------------
-$('#btn-start').addEventListener('click', async () => {
+on('#btn-start', 'click', async () => {
   const btn = $('#btn-start');
   btn.disabled = true;
   const original = btn.textContent;
@@ -238,18 +247,18 @@ $('#btn-start').addEventListener('click', async () => {
     // permission MUST be requested inside this user gesture (iOS)
     const perm = await requestMotionPermission();
     state.motion = perm;
-    $('#debug-motion').textContent = perm;
+    setText('#debug-motion', perm);
     toggleFullscreen(true); // hide browser chrome (no-op on iOS Safari)
 
-    const meta = DECKS.find((d) => d.id === state.deckId);
+    const meta = DECKS.find((d) => d.id === state.deckId) || DECKS[0];
     btn.textContent = 'Loading\u2026';
     const deck = await loadDeck(meta.url);
     await precacheDeck(deck, (d, t) => { btn.textContent = `Caching ${d}/${t}\u2026`; });
     state.deckCards = deck.cards.slice();
 
-    $('#motion-status').textContent = perm === 'granted'
+    setText('#motion-status', perm === 'granted'
       ? ''
-      : (needsMotionPermission() ? 'Motion access not granted — tap-to-score fallback active.' : '');
+      : (needsMotionPermission() ? 'Motion access not granted — tap-to-score fallback active.' : ''));
     runCountdown();
   } catch (err) {
     alert('Could not start: ' + err.message);
@@ -259,16 +268,16 @@ $('#btn-start').addEventListener('click', async () => {
   }
 });
 
-$('#btn-end').addEventListener('click', (e) => { e.stopPropagation(); endRound('time'); });
+on('#btn-end', 'click', (e) => { e.stopPropagation(); endRound('time'); });
 // in-game: re-zero the tilt baseline without leaving the round
-$('#btn-zero').addEventListener('click', async (e) => {
+on('#btn-zero', 'click', async (e) => {
   e.stopPropagation();
   tilt.start();
   await tilt.calibrate(600);
 });
-$('#btn-tune').addEventListener('click', (e) => { e.stopPropagation(); $('#debug').hidden = !$('#debug').hidden; });
-$('#btn-again').addEventListener('click', () => { show('countdown'); runCountdown(); });
-$('#btn-home').addEventListener('click', () => { renderHome(); show('home'); });
+on('#btn-tune', 'click', (e) => { e.stopPropagation(); const d = $('#debug'); if (d) d.hidden = !d.hidden; });
+on('#btn-again', 'click', () => { runCountdown(); });
+on('#btn-home', 'click', () => { renderHome(); show('home'); });
 
 // desktop / fallback: arrows simulate tilt
 document.addEventListener('keydown', (e) => {
@@ -278,44 +287,44 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ---- debug HUD -------------------------------------------------------------
-$('#btn-debug').addEventListener('click', () => { $('#debug').hidden = !$('#debug').hidden; });
+on('#btn-debug', 'click', () => { const d = $('#debug'); if (d) d.hidden = !d.hidden; });
 // settings panel (home)
-$('#btn-settings').addEventListener('click', () => { renderHome(); $('#settings').hidden = !$('#settings').hidden; });
-$('#btn-settings-close').addEventListener('click', () => { $('#settings').hidden = true; });
-$('#debug-invert').addEventListener('change', (e) => { tilt.invert = e.target.checked; });
-$('#debug-threshold').addEventListener('input', (e) => {
+on('#btn-settings', 'click', () => { renderHome(); const s = $('#settings'); if (s) s.hidden = !s.hidden; });
+on('#btn-settings-close', 'click', () => { const s = $('#settings'); if (s) s.hidden = true; });
+on('#debug-invert', 'change', (e) => { tilt.invert = e.target.checked; });
+on('#debug-threshold', 'input', (e) => {
   tilt.threshold = Number(e.target.value);
-  $('#debug-thresh').textContent = e.target.value;
+  setText('#debug-thresh', e.target.value);
 });
-$('#debug-rezero').addEventListener('click', async (e) => {
+on('#debug-rezero', 'click', async (e) => {
   e.stopPropagation();
   const b = e.currentTarget;
   tilt.start();
   b.textContent = 'Hold still\u2026';
   await tilt.calibrate(700);
   b.textContent = 'Set neutral';
-  $('#debug-delta').textContent = '0.00';
+  setText('#debug-delta', '0.00');
 });
-$('#debug-thresh').textContent = String(tilt.threshold);
+setText('#debug-thresh', String(tilt.threshold));
 
 // ---- install / PWA ---------------------------------------------------------
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  $('#btn-install').hidden = false;
+  const b = $('#btn-install'); if (b) b.hidden = false;
 });
-$('#btn-install').addEventListener('click', async () => {
+on('#btn-install', 'click', async () => {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
   deferredPrompt = null;
-  $('#btn-install').hidden = true;
+  const b = $('#btn-install'); if (b) b.hidden = true;
 });
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 const standalone = navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-if (isIOS && !standalone) $('#ios-hint').hidden = false;
+if (isIOS && !standalone) { const h = $('#ios-hint'); if (h) h.hidden = false; }
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -324,5 +333,5 @@ if ('serviceWorker' in navigator) {
 // ---- init ------------------------------------------------------------------
 state.cardsPerRound = store.get('cardsPerRound', 7);
 renderHome();
-$('#debug-threshold').value = String(tilt.threshold);
-$('#debug-motion').textContent = needsMotionPermission() ? 'needs grant' : 'open';
+const thrEl = $('#debug-threshold'); if (thrEl) thrEl.value = String(tilt.threshold);
+setText('#debug-motion', needsMotionPermission() ? 'needs grant' : 'open');
